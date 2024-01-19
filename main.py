@@ -7,6 +7,7 @@ from datetime import datetime
 server = 'irc.chat.twitch.tv'
 port = 6667
 nickname = 'brukinwagner'
+token1 = '91f98i9dxzjxtqfnfzwc2xqx1g0mhb'
 token = 'oauth:91f98i9dxzjxtqfnfzwc2xqx1g0mhb'  # This should be in the format 'oauth:91f98i9dxzjxtqfnfzwc2xqx1g0mhb'
 channel = '#steel'
 client_id = 'gp762nuuoqcoxypju8c569th9wz7q5'
@@ -24,16 +25,34 @@ def send_telegram_message(bot_token, chat_id, text):
     return response.json()
 
 # Function to check if the channel is live
-def is_channel_live(client_id, token, channel_name):
-    url = f'https://api.twitch.tv/helix/streams?user_login={channel_name}'
+def is_channel_live(client_id, token, user_login):
+    # Endpoint to get stream information
+    url = f'https://api.twitch.tv/helix/streams'
+
+    # Set the headers with Client ID and Bearer Token
     headers = {
         'Client-ID': client_id,
         'Authorization': f'Bearer {token}'
     }
-    response = requests.get(url, headers=headers)
-    data = response.json()
 
-    return len(data.get('data', [])) > 0
+    # Set the parameters to filter by user_login (channel name)
+    params = {
+        'user_login': user_login
+    }
+
+    # Make the GET request to the Twitch API
+    response = requests.get(url, headers=headers, params=params)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        data = response.json()
+        # Check if the 'data' array in the response is not empty
+        return len(data.get('data', [])) > 0
+    else:
+        # If the request was not successful, log the error and return False
+        print(f"Error: {response.status_code}")
+        print(response.json())
+        return False
 
 
 # Function to send a message to the chat
@@ -58,7 +77,7 @@ sock.send(f"JOIN {channel}\n".encode('utf-8'))
 # Continuously check if the channel is live and send a random message
 while True:
     try:
-        if is_channel_live(client_id, token, channel.lstrip('#')):
+        if is_channel_live(client_id, token1, channel.lstrip('#')):
             random_message = get_random_message(message_file)
             send_chat_message(sock, random_message)
 
